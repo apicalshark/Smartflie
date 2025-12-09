@@ -143,9 +143,9 @@ jobs:
             if [[ $platform =~ "windows" ]]; then
               zip -r dist/${platform}.zip $dir
             elif [[ $platform =~ "macos" ]]; then
-              cp $dir/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg dist
+              cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
             elif [[ $platform =~ "linux" ]]; then
-              cp $dir/${{ env.DIRECTORY }}-${{ matrix.build }}.AppImage dist
+              cp $dir/${{ env.DIRECTORY }}-${platform}.AppImage dist
             fi
           done
 
