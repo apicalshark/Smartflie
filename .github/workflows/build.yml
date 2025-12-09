@@ -35,7 +35,6 @@ jobs:
     steps:
       - name: Install Build Dependencies
         shell: bash
-        continue-on-error: true
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew upgrade
@@ -50,13 +49,13 @@ jobs:
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: Install AppImage tools
         run: |
-          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.arch }}.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.arch }}.AppImage
           sudo mv linuxdeploy-${{ matrix.arch }}.AppImage /usr/local/bin/linuxdeploy
           sudo chmod +x /usr/local/bin/linuxdeploy
-          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-${{ matrix.arch }}.AppImage 
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-${{ matrix.arch }}.AppImage 
           sudo mv linuxdeploy-plugin-qt-${{ matrix.arch }}.AppImage /usr/local/bin/linuxdeploy-plugin-qt
           sudo chmod +x /usr/local/bin/linuxdeploy-plugin-qt
-          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage
+          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage
           sudo mv appimagetool-${{ matrix.arch }}.AppImage /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
 
