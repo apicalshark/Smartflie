@@ -44,7 +44,7 @@ jobs:
       - name: Build release package
         shell: bash
         run: |
-          mkdir build dist/${{ matrix.build }}
+          mkdir -p build dist/${{ matrix.build }}
           cmake -B build -GNinja
           ninja -C build
           cp -r build/* dist/${{ matrix.build }}
