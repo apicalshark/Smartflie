@@ -101,7 +101,8 @@ jobs:
             # Move binaries
             mv build/${{ env.DIRECTORY }} "$MACOS_DIR"
             mv build/bin/ggml-* "$RESOURCES_DIR"
-            mv build/bin/* "$FRAMEWORKS_DIR"
+            # Static libraries, No need to mv
+            # mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             
             macdeployqt "$APP_DIR" -verbose=1
