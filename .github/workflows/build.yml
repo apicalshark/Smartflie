@@ -43,7 +43,7 @@ jobs:
             echo "Nothing to do for now..."
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
-            sudo apt install -y ninja-build cmake wget qt6-base-dev libfuse2
+            sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2
           fi
 
       - if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -99,7 +99,6 @@ jobs:
             cp assets/linux/${{ env.DIRECTORY }}.desktop AppDir/usr/share/applications
             cp assets/icon/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/icon.png
             linuxdeploy --plugin=qt --appdir AppDir
-            cp AppDir/usr/lib/libqwayland-generic.so AppDir/usr/plugins/platforms/
             if [ "${{ matrix.arch }}" == "x86_64" ]; then
               ARCH=x86_64 appimagetool AppDir ${{ env.DIRECTORY }}-${{ matrix.build }}.AppImage
             else
