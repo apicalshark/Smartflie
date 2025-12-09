@@ -55,16 +55,16 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+            cmake -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=$CFLAGS -march=x86-64-v2 -DCMAKE_CXX_FLAGS=$CXXFLAGS -march=x86-64-v2
             cmake --build build --parallel
             cp -r build/SmartFileOrganizer.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
-            cmake -B build -GNinja
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=$CFLAGS -march=x86-64-v2 -DCMAKE_CXX_FLAGS=$CXXFLAGS -march=x86-64-v2
             ninja -C build
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
             cp -r build/bin/* dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
-            cmake -B build -GNinja
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=$CFLAGS -march=x86-64-v2 -DCMAKE_CXX_FLAGS=$CXXFLAGS -march=x86-64-v2
             ninja -C build
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
             cp -r build/bin/* dist/${{ matrix.build }}
@@ -119,4 +119,25 @@ jobs:
               # TODO: make appimage
             fi
           done
-          
+
+      - name: Upload as artifact
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist/* # Zip the binaries under arti folder
+
+      - name: Upload binaries to release
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/* #Release the binary under dist folder
+          file_glob: true
+          tag: ${{ steps.tagname.outputs.val }}
+          overwrite: true
+
+      - name: Extract version
+        id: extract-version
+        run: |
+          printf "%s=%s\n" >> $GITHUB_OUTPUT tag-name "${GITHUB_REF#refs/tags/}"
