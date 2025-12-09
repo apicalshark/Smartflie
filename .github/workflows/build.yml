@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  workflow_dispatch: # allows manual triggering
+
+
+jobs:
+  build_linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build release package
+        run: |
+          mkdir build dist
+          cmake -B build -GNinja
+          ninja -C build
+          ninja -C build install DESTDIR=dist
+
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-linux
+          path: dist
