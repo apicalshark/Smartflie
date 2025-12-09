@@ -59,7 +59,7 @@ jobs:
             cmake --build build --parallel
             cp -r build/SmartFileOrganizer.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
-            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=$CFLAGS -march=x86-64-v2 -DCMAKE_CXX_FLAGS=$CXXFLAGS -march=x86-64-v2
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
             cp -r build/bin/* dist/${{ matrix.build }}
