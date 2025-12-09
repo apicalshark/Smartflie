@@ -3,31 +3,52 @@ name: Build
 on:
   workflow_dispatch: # allows manual triggering
 
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  build_linux:
-    name: Build Linux
-    runs-on: ubuntu-latest
+  dist:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+        fail-fast: false
+        matrix:
+          build: [linux_x64, macos_arm64, windows_x64]
+          include: 
+            - build: linux_x64
+              os: ubuntu-latest
+            - build: macos_arm64
+              os: macos-latest
+            - build: windows_x64
+              os: windows-latest
 
 
     steps:
       - name: Install Build Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build qt6-base-dev
+          if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
+            brew install ninja cmake qt
+          elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
+            choco install ninja cmake qt
+          elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
+            sudo apt-get update
+            sudo apt-get install ninja-build cmake qt-base-dev
+          fi
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build release package
         run: |
-          mkdir build dist
+          mkdir build dist/${{ matrix.build }}
           cmake -B build -GNinja
           ninja -C build
-          DESTDIR=dist ninja -C build install
-
+          cp -r build/* dist/${{ matrix.build }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: artifact-linux
-          path: dist/
+          path: |
+            dist/${{ matrix.build }}
