@@ -37,7 +37,7 @@ jobs:
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew upgrade
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            choco upgrade
+            echo "Nothing to do for now..."
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt-get update
             sudo apt-get install ninja-build cmake
