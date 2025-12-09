@@ -18,6 +18,10 @@ endif()
 
 include(FetchContent)
 
+# Force libraries to be built statically
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(LLAMA_STATIC ON CACHE BOOL "" FORCE)
+
 # Set llama.cpp options before MakeAvailable
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
