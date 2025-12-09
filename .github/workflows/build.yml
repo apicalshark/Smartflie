@@ -86,7 +86,7 @@ jobs:
             mv build/bin/ggml-* "$RESOURCES_DIR"
             mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
-            sips -s format icns "assets/icon/logo.png" --out "$RESOURCES_DIR/ql_logo.icns"
+            sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
             hdiutil create -volname "${{ env.DIRECTORY }}" -srcfolder "$APP_DIR" -ov -format UDZO "dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg"
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2"
