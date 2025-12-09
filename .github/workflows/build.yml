@@ -17,17 +17,16 @@ jobs:
     name: Build
     runs-on: ${{ matrix.os }}
     strategy:
-        fail-fast: false
-        matrix:
-          build: [linux_x64, macos_arm64, windows_x64]
-          include: 
-            - build: linux_x64
-              os: ubuntu-latest
-            - build: macos_arm64
-              os: macos-latest
-            - build: windows_x64
-              os: windows-latest
-
+      fail-fast: false
+      matrix:
+        build: [linux_x64, macos_arm64, windows_x64]
+        include:
+          - build: linux_x64
+            os: ubuntu-latest
+          - build: macos_arm64
+            os: macos-latest
+          - build: windows_x64
+            os: windows-latest
 
     steps:
       - if: ${{ matrix.os == 'windows-latest' }}
@@ -35,12 +34,12 @@ jobs:
         with:
           version: ${{env.QT_VERSION}}
           arch: win64_mingw
-      
+
       - if: ${{ matrix.os != 'windows-latest' }}
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{env.QT_VERSION}}
-      
+
       - name: Install Build Dependencies
         shell: bash
         run: |
@@ -61,6 +60,7 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
+            
             cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
             cmake --build build --parallel
             cp -r build/SmartFileOrganizer.exe dist/${{ matrix.build }}
@@ -75,7 +75,6 @@ jobs:
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
             cp -r build/bin/* dist/${{ matrix.build }}
           fi
-        
 
       - uses: actions/upload-artifact@v4
         with:
@@ -88,9 +87,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [dist]
     steps:
-
       - uses: actions/download-artifact@v4
-      
+
       - name: Calculate tag name
         run: |
           name=dev
