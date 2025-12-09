@@ -43,7 +43,7 @@ jobs:
             echo "Nothing to do for now..."
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
-            sudo apt install -y ninja-build cmake wget qt6-base-dev
+            sudo apt install -y ninja-build cmake wget qt6-base-dev libfuse2
           fi
 
       - if: ${{ matrix.os == 'ubuntu-latest' }}
