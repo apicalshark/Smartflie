@@ -24,7 +24,7 @@ jobs:
           mkdir build dist
           cmake -B build -GNinja
           ninja -C build
-          ninja -C build install DESTDIR=dist
+          DESTDIR=dist ninja -C build install
 
 
       - uses: actions/upload-artifact@v4
