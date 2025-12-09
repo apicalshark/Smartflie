@@ -57,6 +57,9 @@ jobs:
             wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.arch }}.AppImage
             sudo mv linuxdeploy-${{ matrix.arch }}.AppImage /usr/local/bin/linuxdeploy
             sudo chmod +x /usr/local/bin/linuxdeploy
+            wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-plugin-qt-${{ matrix.arch }}.AppImage 
+            sudo mv linuxdeploy-plugin-qt-${{ matrix.arch }}.AppImage /usr/local/bin/linuxdeploy-plugin-qt
+            sudo chmod +x /usr/local/bin/linuxdeploy-plugin-qt
             wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage
             sudo mv appimagetool-${{ matrix.arch }}.AppImage /usr/local/bin/appimagetool
             sudo chmod +x /usr/local/bin/appimagetool
@@ -97,6 +100,7 @@ jobs:
             cp assets/linux/${{ env.DIRECTORY }}.desktop AppDir/usr/share/applications
             cp assets/icon/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/icon.png
             linuxdeploy --appdir AppDir
+            linuxdeploy-plugin-qt --appdir AppDir
             if [ "${{ matrix.arch }}" == "x86_64" ]; then
               ARCH=x86_64 appimagetool AppDir ${{ env.DIRECTORY }}-${{ matrix.build }}.AppImage
             else
