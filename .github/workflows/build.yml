@@ -26,16 +26,21 @@ jobs:
 
 
     steps:
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.10.0"
+
       - name: Install Build Dependencies
         shell: bash
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
-            brew install ninja cmake qt
+            brew upgrade
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            choco install --force cmake qt6-base-dev
+            choco upgrade
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt-get update
-            sudo apt-get install ninja-build cmake qt6-base-dev
+            sudo apt-get install ninja-build cmake
           fi
 
       - name: Checkout
