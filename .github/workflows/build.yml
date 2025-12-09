@@ -44,7 +44,7 @@ jobs:
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
             sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2 \
-              build-essential mesa-vulkan-drivers vulkan-sdk libcurl4-openssl-dev \
+              build-essential mesa-vulkan-drivers glslang-tools glslc libvulkan-dev libssl-dev \
               libwayland-client0 libwayland-egl1 libwayland-cursor0
           fi
 
