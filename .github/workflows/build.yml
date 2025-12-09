@@ -55,7 +55,7 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            cmake -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=$CFLAGS -march=x86-64-v2 -DCMAKE_CXX_FLAGS=$CXXFLAGS -march=x86-64-v2
+            cmake -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2"
             cmake --build build --parallel
             cp -r build/SmartFileOrganizer.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
@@ -64,7 +64,7 @@ jobs:
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
             cp -r build/bin/* dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
-            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS=$CFLAGS -march=x86-64-v2 -DCMAKE_CXX_FLAGS=$CXXFLAGS -march=x86-64-v2
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2"
             ninja -C build
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
             cp -r build/bin/* dist/${{ matrix.build }}
