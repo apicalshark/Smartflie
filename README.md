@@ -32,7 +32,7 @@
 
 1.  **複製專案代碼 (Clone)**：
     ```bash
-    git clone https://github.com/your-username/smart-file-organizer.git
+    git clone https://github.com/anndy145/Smartflie.git
     cd smart-file-organizer
     ```
 

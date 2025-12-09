@@ -49,7 +49,7 @@ bool LlamaEngine::loadModel(const std::string& modelPath)
     }
 
     llama_context_params ctx_params = llama_context_default_params();
-    ctx_params.n_ctx = 2048; 
+    ctx_params.n_ctx = 8192; // Increase context for Llama-3
     ctx = llama_init_from_model(model, ctx_params);
 
     if (!ctx) {
@@ -70,15 +70,15 @@ std::string LlamaEngine::generateResponse(const std::string& prompt)
 
     const llama_vocab* vocab = llama_model_get_vocab(model);
 
-    // 1. Tokenize
-    const int n_prompt = -llama_tokenize(vocab, prompt.c_str(), prompt.length(), NULL, 0, true, false);
+    // 1. Tokenize - Enable Special Tokens Parsing (true as last arg)
+    const int n_prompt = -llama_tokenize(vocab, prompt.c_str(), prompt.length(), NULL, 0, true, true);
     std::vector<llama_token> prompt_tokens(n_prompt);
-    if (llama_tokenize(vocab, prompt.c_str(), prompt.length(), prompt_tokens.data(), n_prompt, true, false) < 0) {
+    if (llama_tokenize(vocab, prompt.c_str(), prompt.length(), prompt_tokens.data(), n_prompt, true, true) < 0) {
         return "Error: Tokenization failed";
     }
 
     // 2. Initial Batch
-    llama_batch batch = llama_batch_init(2048, 0, 1);
+    llama_batch batch = llama_batch_init(8192, 0, 1); // Match n_ctx
     for(int i=0; i<n_prompt; i++) {
         batch_add(batch, prompt_tokens[i], i, {0}, false);
     }
@@ -95,11 +95,11 @@ std::string LlamaEngine::generateResponse(const std::string& prompt)
 
     // 4. Sample loop
     std::stringstream response_ss;
-    int n_predict = 128;
+    int n_predict = 256; // Allow a bit more output
     
     auto sparams = llama_sampler_chain_default_params();
     struct llama_sampler * smpl = llama_sampler_chain_init(sparams);
-    llama_sampler_chain_add(smpl, llama_sampler_init_greedy());
+    llama_sampler_chain_add(smpl, llama_sampler_init_greedy()); // Greedy is fine for tagging
 
     llama_token new_token_id = 0;
 
@@ -135,27 +135,26 @@ std::string LlamaEngine::generateResponse(const std::string& prompt)
 
 std::string LlamaEngine::suggestTags(const std::string& filename, const std::string& content)
 {
-    std::string prompt;
-    if (content.empty()) {
-        prompt = "System: You are a file tagging assistant. Your goal is to provide concise tags.\n"
-                 "User: Analyze the filename '" + filename + "' and suggest relevant keywords or tags.\n"
-                 "Rules:\n"
-                 "1. Suggest up to 5 tags.\n"
-                 "2. Use TRADITIONAL CHINESE (繁體中文) for general terms. Keep proper nouns in English.\n"
-                 "3. Tags must be short.\n"
-                 "4. Output ONLY a comma-separated list.\n"
-                 "Assistant: Tags:";
-    } else {
-        std::string safeContent = content.substr(0, 1000); 
-        prompt = "System: You are a file tagging assistant. Your goal is to provide concise tags.\n"
-                 "User: Analyze the filename '" + filename + "' and the following file content preview:\n\n" + safeContent + "\n\n"
-                 "Rules:\n"
-                 "1. Suggest up to 5 relevant keywords/tags.\n"
-                 "2. Use TRADITIONAL CHINESE (繁體中文) for general terms.\n"
-                 "3. Tags must be SHORT.\n"
-                 "4. Output ONLY a comma-separated list.\n"
-                 "Assistant: Tags:";
-    }
+    // Qwen / ChatML Format
+    // Format: <|im_start|>system\n...\n<|im_end|>\n<|im_start|>user\n...\n<|im_end|>\n<|im_start|>assistant\n
     
+    // Increase limit to 16000 chars (approx fits in 8k context)
+    std::string safeContent = content.empty() ? "(No content)" : content.substr(0, 16000);
+    
+    std::string prompt = 
+        "<|im_start|>system\n"
+        "You are a helpful file organization assistant. Analyze the given file metadata and content to suggest strict tags.\n"
+        "Rules:\n"
+        "1. Output ONLY a comma-separated list of tags.\n"
+        "2. Suggest 3-5 tags.\n"
+        "3. Use Traditional Chinese (繁體中文) for general concepts.\n"
+        "4. Keep tags concise (under 5 words).\n"
+        "<|im_end|>\n"
+        "<|im_start|>user\n"
+        "Filename: " + filename + "\n"
+        "Content Preview: " + safeContent + "\n"
+        "<|im_end|>\n"
+        "<|im_start|>assistant\n";
+
     return generateResponse(prompt);
 }

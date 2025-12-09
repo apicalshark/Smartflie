@@ -19,6 +19,10 @@ public:
     std::vector<std::string> getTags(const std::string& filename) const;
     
     void setTags(const std::string& filename, const std::vector<std::string>& tags);
+    
+    // File operations support
+    void renameFile(const std::string& oldFilename, const std::string& newFilename);
+    void removeFile(const std::string& filename);
 
     std::vector<std::string> getAllTags() const;
     std::vector<std::string> getFilesByTag(const std::string& tag) const;

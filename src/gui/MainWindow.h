@@ -8,17 +8,17 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QCheckBox> // Added
+#include <QCheckBox>
 #include <QSplitter>
 #include <QScrollArea>
 #include <QToolBar>
 #include <QTabWidget>
-#include <QTextEdit> // Added back
-#include <QFutureWatcher> // Added back
-#include <QtConcurrent> // Added back
+#include <QTextEdit>
+#include <QFutureWatcher>
+#include <QtConcurrent>
 #include "GraphWidget.h"
-#include "../ai/LlamaEngine.h" // Added back
-#include "../core/TagManager.h" // Added back
+#include "../ai/LlamaEngine.h"
+#include "../core/TagManager.h"
 
 class MainWindow : public QMainWindow
 {
@@ -35,6 +35,10 @@ private slots:
     void analyzeFile();
     void onAnalysisFinished();
     void saveTags();
+    void openFile(QListWidgetItem* item); // Double click
+    void renameFile(); // Context menu
+    void deleteFile(); // Context menu
+    void showContextMenu(const QPoint &pos); // Right click
     void addTag();
     void removeTag();
     void removeGlobalTag();
@@ -42,6 +46,11 @@ private slots:
     void onFileSelected(QListWidgetItem *item);
     void onTagSelected(QListWidgetItem *item);
     void onTabChanged(int index);
+    // Zooming
+    void zoomIn();
+    void zoomOut();
+    void fitToWindow();
+    void updateImageDisplay(); // Applies current scale/pixmap to label
 
 private:
     // UI Components
@@ -50,6 +59,7 @@ private:
     QToolBar *toolbar;
     QCheckBox *chkRecursive;
     QTabWidget *tabWidget;
+    QScrollArea *scrollArea;
     
     // Tab 1: Explorer
     QWidget *explorerTab;
@@ -85,7 +95,15 @@ private:
     LlamaEngine llamaEngine;
     TagManager tagManager;
     QFutureWatcher<std::string> *watcher;
+    
+    // State
+    QPixmap currentPreviewPixmap; // Store original for resizing logic
+    double scaleFactor = 1.0;
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
+private:
     void setupToolbar();
     void setupLayout();
     void updateTagList();

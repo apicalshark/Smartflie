@@ -6,6 +6,11 @@
 #include <QMessageBox>
 #include <QInputDialog> // Added
 #include <QApplication>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QMenu>
+#include <QAction>
+#include <QCursor>
 #include <fstream>
 #include <algorithm>
 #include <set>
@@ -108,7 +113,10 @@ void MainWindow::setupLayout()
     midLayout->addWidget(txtSearch);
 
     fileList = new QListWidget(this);
+    fileList->setContextMenuPolicy(Qt::CustomContextMenu); // Enable context menu
     connect(fileList, &QListWidget::itemClicked, this, &MainWindow::onFileSelected);
+    connect(fileList, &QListWidget::itemDoubleClicked, this, &MainWindow::openFile); // Double click to open
+    connect(fileList, &QListWidget::customContextMenuRequested, this, &MainWindow::showContextMenu); // Right click
     midLayout->addWidget(fileList);
 
     mainSplitter->addWidget(middlePanel);
@@ -119,10 +127,32 @@ void MainWindow::setupLayout()
     rightLayout->addWidget(new QLabel("👁️ 預覽與資訊 (Preview)"));
 
     // Preview Area
+    QScrollArea *scrollArea = new QScrollArea(this);
+    scrollArea->setBackgroundRole(QPalette::Dark);
+    scrollArea->setWidgetResizable(false); // Disable auto-resize to allow zoom
+    scrollArea->setAlignment(Qt::AlignCenter); // Center image when smaller than view
+    
     lblPreviewImage = new QLabel("選擇檔案以預覽 (Select file to preview)", this);
     lblPreviewImage->setAlignment(Qt::AlignCenter);
-    lblPreviewImage->setStyleSheet("border: 1px dashed gray; min-height: 200px;");
-    rightLayout->addWidget(lblPreviewImage);
+    lblPreviewImage->setScaledContents(true); // Allow pixmap scaling
+    
+    scrollArea->setWidget(lblPreviewImage);
+    rightLayout->addWidget(scrollArea);
+    
+    // Zoom Controls
+    QHBoxLayout *zoomLayout = new QHBoxLayout();
+    QPushButton *btnZoomIn = new QPushButton("➕ 放大", this);
+    QPushButton *btnZoomOut = new QPushButton("➖ 縮小", this);
+    QPushButton *btnFit = new QPushButton("↔ 適應視窗", this);
+    
+    connect(btnZoomIn, &QPushButton::clicked, this, &MainWindow::zoomIn);
+    connect(btnZoomOut, &QPushButton::clicked, this, &MainWindow::zoomOut);
+    connect(btnFit, &QPushButton::clicked, this, &MainWindow::fitToWindow);
+    
+    zoomLayout->addWidget(btnZoomIn);
+    zoomLayout->addWidget(btnZoomOut);
+    zoomLayout->addWidget(btnFit);
+    rightLayout->addLayout(zoomLayout);
     
     txtPreviewText = new QTextEdit(this);
     txtPreviewText->setReadOnly(true);
@@ -165,9 +195,10 @@ void MainWindow::setupLayout()
     mainSplitter->addWidget(rightPanel);
 
     // Set initial sizes: 20% | 40% | 40%
+    // Set initial sizes: 10% | 20% | 70% (Prioritize Preview)
     mainSplitter->setStretchFactor(0, 1);
     mainSplitter->setStretchFactor(1, 2);
-    mainSplitter->setStretchFactor(2, 2);
+    mainSplitter->setStretchFactor(2, 7);
 
     tabWidget->addTab(explorerTab, "📁 資料夾視圖 (Explorer)");
 
@@ -204,7 +235,10 @@ void MainWindow::scanFiles()
     std::vector<std::string> files = scanner.scanDirectory(currentPath.toStdString(), recursive);
 
     for (const auto& file : files) {
-        fileList->addItem(QString::fromStdString(file));
+        std::filesystem::path p(file);
+        QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(p.filename().string()));
+        item->setData(Qt::UserRole, QString::fromStdString(file)); // Store full relative path
+        fileList->addItem(item);
     }
     
     updateTagList();
@@ -282,9 +316,11 @@ void MainWindow::analyzeFile()
         return;
     }
 
+    QString relPath = selectedItems.first()->data(Qt::UserRole).toString();
     QString filename = selectedItems.first()->text();
+
     std::filesystem::path path(currentPath.toStdString());
-    path /= filename.toStdString();
+    path /= relPath.toStdString();
     QString filePath = QString::fromStdString(path.string());
     
     std::string content = "";
@@ -302,21 +338,27 @@ void MainWindow::analyzeFile()
         try {
             std::ifstream f(filePath.toStdString());
             if (f.is_open()) {
-                char buffer[1025];
-                f.read(buffer, 1024);
-                buffer[f.gcount()] = '\0';
-                content = std::string(buffer);
-                lblStatus->setText("正在分析檔案內容... (這可能需要幾秒鐘)");
+                std::stringstream buffer;
+                buffer << f.rdbuf(); // Read full content
+                content = buffer.str();
+                lblStatus->setText(QString("正在分析檔案內容... (%1 chars)").arg(content.length()));
             }
         } catch (...) {}
     } 
-    else if (ext == ".docx" || ext == ".xlsx" || ext == ".pdf") {
+    else if (ext == ".docx" || ext == ".xlsx" || ext == ".pptx" || 
+             ext == ".odt" || ext == ".odf" || 
+             ext == ".html" || ext == ".htm" || ext == ".shtml" || ext == ".xhtml" || 
+             ext == ".pdf") {
         lblStatus->setText(QString("正在解析文件內容: %1").arg(filename));
         content = DocumentParser::extractText(filePath.toStdString());
-        if (content.length() > 2000) content = content.substr(0, 2000) + "...";
     }
     else {
         lblStatus->setText("正在分析檔名...");
+    }
+
+    // Unified safety truncation (16000 chars)
+    if (content.length() > 16000) {
+        content = content.substr(0, 16000) + "... [Truncated]";
     }
 
     btnAnalyzeFile->setEnabled(false);
@@ -380,13 +422,18 @@ void MainWindow::updateFilePreview(const QString& filePath)
     if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp") {
         QPixmap pixmap(filePath);
         if (!pixmap.isNull()) {
-            lblPreviewImage->setPixmap(pixmap.scaled(lblPreviewImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            currentPreviewPixmap = pixmap;
             lblPreviewImage->setVisible(true);
+            fitToWindow(); // Default to fit
         } else {
             lblPreviewImage->setText("無法載入圖片 (Image Load Failed)");
             lblPreviewImage->setVisible(true);
+            currentPreviewPixmap = QPixmap();
         }
-    } else if (ext == ".docx" || ext == ".xlsx" || ext == ".pdf") {
+    } else if (ext == ".docx" || ext == ".xlsx" || ext == ".pptx" || 
+               ext == ".odt" || ext == ".odf" || 
+               ext == ".html" || ext == ".htm" || ext == ".shtml" || ext == ".xhtml" || 
+               ext == ".pdf") {
         txtPreviewText->setVisible(true);
         std::string content = DocumentParser::extractText(filePath.toStdString());
         if (content.empty()) content = "(No searchable text found or encrypted)";
@@ -429,8 +476,12 @@ void MainWindow::saveTags()
     QList<QListWidgetItem*> selectedItems = fileList->selectedItems();
     if (selectedItems.isEmpty()) return;
 
-    QString filePath = selectedItems.first()->text();
-    std::filesystem::path path(filePath.toStdString());
+    QString relPath = selectedItems.first()->data(Qt::UserRole).toString();
+
+    std::filesystem::path path(currentPath.toStdString());
+    path /= relPath.toStdString();
+    
+    QString filePath = QString::fromStdString(path.string());
     std::string filename = path.filename().string();
     
     QString pendingTags = btnSaveTags->property("pendingTags").toString();
@@ -584,5 +635,165 @@ void MainWindow::removeGlobalTag()
         }
         
         lblStatus->setText(QString("已刪除標籤: %1 (Global)").arg(tag));
+    }
+}
+
+void MainWindow::openFile(QListWidgetItem* item)
+{
+    if (!item) return;
+    QString relPath = item->data(Qt::UserRole).toString();
+    std::filesystem::path path(currentPath.toStdString());
+    path /= relPath.toStdString();
+    
+    QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(path.string())));
+}
+
+void MainWindow::showContextMenu(const QPoint &pos)
+{
+    QListWidgetItem *item = fileList->itemAt(pos);
+    if (!item) return;
+
+    QMenu contextMenu(tr("Context menu"), this);
+
+    QAction actionOpen("開啟 (Open)", this);
+    connect(&actionOpen, &QAction::triggered, [this, item](){ openFile(item); });
+    contextMenu.addAction(&actionOpen);
+
+    QAction actionRename("重新命名 (Rename)", this);
+    connect(&actionRename, &QAction::triggered, this, &MainWindow::renameFile);
+    contextMenu.addAction(&actionRename);
+
+    QAction actionDelete("刪除 (Delete)", this);
+    connect(&actionDelete, &QAction::triggered, this, &MainWindow::deleteFile);
+    contextMenu.addAction(&actionDelete);
+
+    contextMenu.exec(fileList->mapToGlobal(pos));
+}
+
+void MainWindow::renameFile()
+{
+    QList<QListWidgetItem*> selectedItems = fileList->selectedItems();
+    if (selectedItems.isEmpty()) return;
+    
+    QString oldName = selectedItems.first()->text();
+    QString relPath = selectedItems.first()->data(Qt::UserRole).toString();
+    
+    bool ok;
+    QString newName = QInputDialog::getText(this, tr("Rename File"),
+                                            tr("New name:"), QLineEdit::Normal,
+                                            oldName, &ok);
+    if (ok && !newName.isEmpty() && newName != oldName) {
+        std::filesystem::path oldFull(currentPath.toStdString());
+        oldFull /= relPath.toStdString();
+        
+        // Calculate new relative path
+        std::filesystem::path p(relPath.toStdString());
+        p.replace_filename(newName.toStdString());
+        
+        std::filesystem::path newFull(currentPath.toStdString());
+        newFull /= p;
+
+        try {
+            std::filesystem::rename(oldFull, newFull);
+            // Update Tag Manager (Using filenames as keys)
+            tagManager.renameFile(oldName.toStdString(), newName.toStdString());
+            // Refresh UI
+            scanFiles(); 
+            lblStatus->setText(QString("已更名: %1 -> %2").arg(oldName).arg(newName));
+        } catch (const std::filesystem::filesystem_error& e) {
+             QMessageBox::critical(this, "Error", QString("Rename failed: %1").arg(e.what()));
+        }
+    }
+}
+
+void MainWindow::deleteFile()
+{
+    QList<QListWidgetItem*> selectedItems = fileList->selectedItems();
+    if (selectedItems.isEmpty()) return;
+    
+    QString filename = selectedItems.first()->text();
+    QString relPath = selectedItems.first()->data(Qt::UserRole).toString();
+    
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Delete File", 
+                                  QString("確定要刪除檔案 '%1' 嗎?\n(此動作無法復原)").arg(filename),
+                                  QMessageBox::Yes|QMessageBox::No);
+    
+    if (reply == QMessageBox::Yes) {
+        std::filesystem::path path(currentPath.toStdString());
+        path /= relPath.toStdString();
+        
+        try {
+            if (std::filesystem::remove(path)) {
+                // Update Tag Manager (Using filename as key)
+                tagManager.removeFile(filename.toStdString());
+                // Refresh UI
+                scanFiles();
+                // Clear Preview
+                txtPreviewText->clear();
+                lblPreviewImage->setText("已刪除 (Deleted)");
+                currentPreviewPixmap = QPixmap(); // Clear image
+                lblTags->setText("標籤: --");
+                
+                lblStatus->setText(QString("已刪除: %1").arg(filename));
+            } else {
+                 QMessageBox::critical(this, "Error", "刪除失敗 (Delete failed). File may be in use.");
+            }
+        } catch (const std::filesystem::filesystem_error& e) {
+             QMessageBox::critical(this, "Error", QString("Delete failed: %1").arg(e.what()));
+        }
+    }
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    // No longer strictly needed for resize as fitToWindow handles it, 
+    // but useful if "Fit to Window" is active mode. 
+    // For now we rely on explicit buttons or auto-fit on load.
+    return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::updateImageDisplay() {
+    if (currentPreviewPixmap.isNull()) return;
+
+    QSize newSize = currentPreviewPixmap.size() * scaleFactor;
+    
+    // For ScrollArea to work with ScaledContents:
+    // We resize the LABEL.
+    lblPreviewImage->resize(newSize);
+    lblPreviewImage->setPixmap(currentPreviewPixmap);
+}
+
+void MainWindow::zoomIn() {
+    scaleFactor *= 1.25;
+    updateImageDisplay();
+}
+
+void MainWindow::zoomOut() {
+    scaleFactor *= 0.8;
+    updateImageDisplay();
+}
+
+void MainWindow::fitToWindow() {
+    if (currentPreviewPixmap.isNull()) return;
+    
+    // Find parent scroll area
+    QScrollArea* sa = qobject_cast<QScrollArea*>(lblPreviewImage->parent()->parent());
+    // Note: scrollArea->setWidget(label) reparents label to scrollArea's viewport's widget?
+    // Actually simpler: we added scrollArea as local var in setup, let's find it or assuming label's parent
+    // Actually, just calculating based on available space is hard without member pointer to scrollArea.
+    // Let's assume arbitrary fit or fix 'scrollArea' visibility in Header.
+    // Hack: Just set scaleFactor to 1.0 (Original) or estimate.
+    
+    // Better: "Fit to Window" means scaling image to fit the label's *visible* area?
+    // With ScrollArea, "Fit" usually means matching the ScrollArea viewport size.
+    
+    QWidget *view = lblPreviewImage->parentWidget();
+    if (view) {
+        QSize viewSize = view->size();
+        double wRatio = (double)viewSize.width() / currentPreviewPixmap.width();
+        double hRatio = (double)viewSize.height() / currentPreviewPixmap.height();
+        scaleFactor = std::min(wRatio, hRatio) * 0.95; // 95% to avoid scrollbars
+        updateImageDisplay();
     }
 }

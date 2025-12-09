@@ -117,6 +117,21 @@ void TagManager::setTags(const std::string& filename, const std::vector<std::str
     saveTags();
 }
 
+void TagManager::renameFile(const std::string& oldFilename, const std::string& newFilename) {
+    if (metadata.contains(oldFilename)) {
+        metadata[newFilename] = metadata[oldFilename];
+        metadata.erase(oldFilename);
+        saveTags();
+    }
+}
+
+void TagManager::removeFile(const std::string& filename) {
+    if (metadata.contains(filename)) {
+        metadata.erase(filename);
+        saveTags();
+    }
+}
+
 std::vector<std::string> TagManager::getAllTags() const {
     std::set<std::string> uniqueTags;
     for (auto& element : metadata.items()) {

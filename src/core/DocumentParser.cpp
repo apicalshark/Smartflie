@@ -18,6 +18,12 @@ std::string DocumentParser::extractText(const std::string& filePath)
         return parsDocx(filePath);
     } else if (ext == ".xlsx") {
         return parseXlsx(filePath);
+    } else if (ext == ".pptx") {
+        return parsePptx(filePath);
+    } else if (ext == ".odt" || ext == ".odf") {
+        return parseOdt(filePath);
+    } else if (ext == ".html" || ext == ".htm" || ext == ".shtml" || ext == ".xhtml") {
+        return parseHtml(filePath);
     } else if (ext == ".pdf") {
         return parsePdf(filePath);
     }
@@ -160,6 +166,75 @@ std::string DocumentParser::parseXlsx(const std::string& filePath)
     }
     
     return fullText.toStdString();
+}
+
+std::string DocumentParser::parsePptx(const std::string& filePath)
+{
+    std::string fullText;
+    
+    // Iterate through slides (assuming slide1.xml, slide2.xml... up to 50 for performance)
+    for (int i = 1; i <= 50; ++i) {
+        std::string entryName = "ppt/slides/slide" + std::to_string(i) + ".xml";
+        std::string slideXml = extractZipEntry(filePath, entryName);
+        
+        // Stop if file not found (returns DEBUG error message)
+        if (slideXml.rfind("DEBUG:", 0) == 0) {
+            break; 
+        }
+        
+        QXmlStreamReader xml(QString::fromStdString(slideXml));
+        while (!xml.atEnd() && !xml.hasError()) {
+            QXmlStreamReader::TokenType token = xml.readNext();
+            if (token == QXmlStreamReader::StartElement) {
+                // In PPTX, text is usually in <a:t> (namespace a, tag t)
+                // QXmlStreamReader::name() returns "t".
+                if (xml.name().toString() == "t") { 
+                    fullText += xml.readElementText().toStdString() + "\n";
+                }
+            }
+        }
+    }
+    
+    if (fullText.empty()) {
+        return "(PPTX Read: No text found or encrypted)";
+    }
+    
+    return fullText;
+}
+
+
+
+std::string DocumentParser::parseOdt(const std::string& filePath)
+{
+    std::string xmlContent = extractZipEntry(filePath, "content.xml");
+    if (xmlContent.rfind("DEBUG:", 0) == 0) return xmlContent; 
+    
+    std::string text;
+    QXmlStreamReader xml(QString::fromStdString(xmlContent));
+
+    while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if (token == QXmlStreamReader::StartElement) {
+            // ODT text is in <text:p> or <text:h>
+            QString name = xml.name().toString();
+            if (name == "p" || name == "h") { 
+                text += xml.readElementText().toStdString() + "\n";
+            }
+        }
+    }
+    return text;
+}
+
+std::string DocumentParser::parseHtml(const std::string& filePath)
+{
+    // Simple read
+    QFile file(QString::fromStdString(filePath));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return "";
+    
+    // Very naive strip tags or just return raw. Llama handles HTML reasonably well.
+    // Let's rely on Llama to ignore tags.
+    QByteArray data = file.readAll();
+    return data.toStdString();
 }
 
 std::string DocumentParser::parsePdf(const std::string& filePath)
