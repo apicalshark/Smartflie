@@ -43,7 +43,8 @@ jobs:
             echo "Nothing to do for now..."
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
-            sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2
+            sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2 \
+              build-essential mesa-vulkan-drivers vulkan-sdk libcurl4-openssl-dev
           fi
 
       - if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -91,7 +92,9 @@ jobs:
             sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
             hdiutil create -volname "${{ env.DIRECTORY }}" -srcfolder "$APP_DIR" -ov -format UDZO "dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg"
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
-            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2"
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release \
+              -DGGML_VULKAN=ON -DGGML_CPU_ALL_VARIANTS=ON \
+              -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2"
             ninja -C build
             mkdir -p AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/512x512/apps
             cp -r build/bin/* AppDir/usr/lib64
