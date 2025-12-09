@@ -97,7 +97,12 @@ jobs:
               -DGGML_VULKAN=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON \
               -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2 -O3" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2 -O3"
             ninja -C build
-            mkdir -p AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/512x512/apps
+            mkdir -p ${{ env.DIRECTORY }} AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/512x512/apps
+            cp -r build/bin/* ${{ env.DIRECTORY }}/
+            cp build/${{ env.DIRECTORY }} ${{ env.DIRECTORY }}/
+            tar -czvf ${{ env.DIRECTORY }}-${{ matrix.build }}.tar.gz ${{ env.DIRECTORY }}
+            cp ${{ env.DIRECTORY }}.tar.gz dist/${{ matrix.build }}
+
             cp -r build/bin/* AppDir/usr/lib64
             cp build/${{ env.DIRECTORY }} AppDir/usr/bin
             cp assets/linux/${{ env.DIRECTORY }}.desktop AppDir/usr/share/applications
@@ -154,6 +159,7 @@ jobs:
               cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
             elif [[ $platform =~ "linux" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.AppImage dist
+              cp $dir/${{ env.DIRECTORY }}-${platform}.tar.gz dist
             fi
           done
 
