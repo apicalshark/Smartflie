@@ -87,6 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [dist]
     steps:
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
 
       - name: Calculate tag name
