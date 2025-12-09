@@ -50,8 +50,23 @@ jobs:
         shell: bash
         run: |
           mkdir -p build dist/${{ matrix.build }}
-          cmake -B build -GNinja
-          ninja -C build
+          if [[ ${{ matrix.build }} == "windows_x64" ]]; then
+            cmake -B build --G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+            cp build/SmartFileOrganizer.exe dist/${{ matrix.build }}
+          elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
+            cmake -B build -GNinja
+            ninja -C build
+            cp build/SmartFileOrganizer dist/${{ matrix.build }}
+          elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
+            cmake -B build -GNinja
+            ninja -C build
+            cp build/SmartFileOrganizer dist/${{ matrix.build }}
+            cp build/bin/llama.so dist/${{ matrix.build }}
+            cp build/bin/libggml.so dist/${{ matrix.build }}
+            cp build/bin/libggml-base.so dist/${{ matrix.build }}
+            cp build/bin/libggml-cpu.so dist/${{ matrix.build }}
+          fi
+          
           cp -r build/* dist/${{ matrix.build }}
 
       - uses: actions/upload-artifact@v4
