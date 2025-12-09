@@ -61,7 +61,7 @@ jobs:
             cmake -B build -GNinja
             ninja -C build
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
-            cp build/bin/llama.so dist/${{ matrix.build }}
+            cp build/bin/libllama.so dist/${{ matrix.build }}
             cp build/bin/libggml.so dist/${{ matrix.build }}
             cp build/bin/libggml-base.so dist/${{ matrix.build }}
             cp build/bin/libggml-cpu.so dist/${{ matrix.build }}
