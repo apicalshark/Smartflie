@@ -95,7 +95,7 @@ jobs:
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release \
               -DGGML_VULKAN=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON \
-              -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v3 -O3" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v3 -O3"
+              -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2 -O3" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2 -O3"
             ninja -C build
             mkdir -p AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/512x512/apps
             cp -r build/bin/* AppDir/usr/lib64
