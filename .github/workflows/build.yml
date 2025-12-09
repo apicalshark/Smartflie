@@ -101,7 +101,7 @@ jobs:
             cp -r build/bin/* ${{ env.DIRECTORY }}/
             cp build/${{ env.DIRECTORY }} ${{ env.DIRECTORY }}/
             tar -czvf ${{ env.DIRECTORY }}-${{ matrix.build }}.tar.gz ${{ env.DIRECTORY }}
-            cp ${{ env.DIRECTORY }}.tar.gz dist/${{ matrix.build }}
+            cp ${{ env.DIRECTORY }}-${{ matrix.build }}.tar.gz dist/${{ matrix.build }}
 
             cp -r build/bin/* AppDir/usr/lib64
             cp build/${{ env.DIRECTORY }} AppDir/usr/bin
