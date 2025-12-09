@@ -94,4 +94,10 @@ jobs:
           echo TAG=$name >> $GITHUB_ENV
         id: tagname
 
-      
+      - name: Build archive
+        run: |
+          set -ex
+
+          rm -rf tmp
+          mkdir tmp
+          mkdir dist
