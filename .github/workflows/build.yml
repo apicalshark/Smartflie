@@ -24,7 +24,7 @@ jobs:
         build: [linux_x64, macos_arm64]
         include:
           - build: linux_x64
-            os: ubuntu-latest
+            os: ubuntu-22.04
             arch: x86_64
           - build: macos_arm64
             os: macos-latest
