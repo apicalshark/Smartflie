@@ -96,11 +96,12 @@ jobs:
             mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
 
-            # 1. Fix RPATH: Tell executable to look in the bundled Frameworks folder for libllama
+            # 1. Fix RPATH for libllama
             install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/${{ env.DIRECTORY }}"
             
-            # 2. Bundle Qt: Copy Qt libraries/plugins and fix their linking
-            $(brew --prefix qt)/bin/macdeployqt "$APP_DIR" -always-overwrite
+            # 2. Bundle Qt: Explicitly point to Homebrew lib directory
+            QT_HOME=$(brew --prefix qt)
+            "$QT_HOME/bin/macdeployqt" "$APP_DIR" -libpath="$QT_HOME/lib" -always-overwrite -verbose=1
 
             # 3. Sign
             codesign --force --deep --sign - "$APP_DIR"
