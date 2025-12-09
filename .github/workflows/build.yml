@@ -52,7 +52,7 @@ jobs:
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
             cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-            tree build
+            ls -al build/*
             cp build/SmartFileOrganizer.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja
@@ -65,11 +65,12 @@ jobs:
             cp build/SmartFileOrganizer dist/${{ matrix.build }}
             cp -r build/bin/* dist/${{ matrix.build }}
           fi
-          
-          cp -r build/* dist/${{ matrix.build }}
+        
 
       - uses: actions/upload-artifact@v4
         with:
           name: artifact-${{ matrix.build }}
           path: |
             dist/${{ matrix.build }}
+
+  
