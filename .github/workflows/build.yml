@@ -44,7 +44,7 @@ jobs:
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
             sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2 \
-              build-essential mesa-vulkan-drivers vulkan-sdk libcurl4-openssl-dev
+              build-essential mesa-vulkan-drivers vulkan-sdk libcurl4-openssl-dev libwayland-client0 libwayland-egl1
           fi
 
       - if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -101,7 +101,7 @@ jobs:
             cp build/${{ env.DIRECTORY }} AppDir/usr/bin
             cp assets/linux/${{ env.DIRECTORY }}.desktop AppDir/usr/share/applications
             cp assets/icon/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/icon.png
-            export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so"
+            export EXTRA_PLATFORM_PLUGINS="libwayland-client.so;libqwayland-egl.so;libqwayland-generic.so"
             linuxdeploy --plugin=qt --appdir AppDir
             if [ "${{ matrix.arch }}" == "x86_64" ]; then
               ARCH=x86_64 appimagetool AppDir ${{ env.DIRECTORY }}-${{ matrix.build }}.AppImage
