@@ -38,7 +38,7 @@ jobs:
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew upgrade
-            brew install ninja cmake qt
+            brew install qt
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
             echo "Nothing to do for now..."
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
@@ -98,9 +98,7 @@ jobs:
             cp build/${{ env.DIRECTORY }} AppDir/usr/bin
             cp assets/linux/${{ env.DIRECTORY }}.desktop AppDir/usr/share/applications
             cp assets/icon/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/icon.png
-
-            # https://github.com/linuxdeploy/linuxdeploy-plugin-qt/issues/200
-            linuxdeploy --plugin=qt --appdir AppDir --library=${QT_BASE_DIR}/plugins/platforms/libqwayland-generic.so
+            linuxdeploy --plugin=qt --appdir AppDir
             cp AppDir/usr/lib/libqwayland-generic.so AppDir/usr/plugins/platforms/
             if [ "${{ matrix.arch }}" == "x86_64" ]; then
               ARCH=x86_64 appimagetool AppDir ${{ env.DIRECTORY }}-${{ matrix.build }}.AppImage
