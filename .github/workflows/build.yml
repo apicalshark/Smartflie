@@ -32,7 +32,7 @@ jobs:
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew install ninja cmake qt
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            choco install ninja cmake qt
+            choco install --force cmake qt6-base-dev
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt-get update
             sudo apt-get install ninja-build cmake qt6-base-dev
@@ -51,6 +51,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: artifact-linux
+          name: artifact-${{ matrix.build }}
           path: |
             dist/${{ matrix.build }}
