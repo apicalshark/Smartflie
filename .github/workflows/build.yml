@@ -51,7 +51,7 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            cmake -B build --G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+            cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
             cp build/SmartFileOrganizer.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja
