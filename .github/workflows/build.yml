@@ -76,7 +76,7 @@ jobs:
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
             cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-            cmake --build build --parallel
+            cmake --build build -j$(nproc)
             cp -r build/${{ env.DIRECTORY }}.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
@@ -95,7 +95,7 @@ jobs:
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release \
               -DGGML_VULKAN=ON -DGGML_CPU_ALL_VARIANTS=ON \
-              -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2"
+              -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v3 -O3" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v3 -O3"
             ninja -C build
             mkdir -p AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/512x512/apps
             cp -r build/bin/* AppDir/usr/lib64
