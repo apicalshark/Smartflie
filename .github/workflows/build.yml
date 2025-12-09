@@ -91,11 +91,11 @@ jobs:
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2"
             ninja -C build
-            mkdir -p AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+            mkdir -p AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/512x512/apps
             cp -r build/bin/* AppDir/usr/lib64
             cp build/${{ env.DIRECTORY }} AppDir/usr/bin
             cp assets/linux/${{ env.DIRECTORY }}.desktop AppDir/usr/share/applications
-            cp assets/icon/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/${{ env.DIRECTORY }}.png
+            cp assets/icon/icon.png AppDir/usr/share/icons/hicolor/512x512/apps/icon.png
             linuxdeploy --appdir AppDir
             if [ "${{ matrix.arch }}" == "x86_64" ]; then
               ARCH=x86_64 appimagetool AppDir ${{ env.DIRECTORY }}-${{ matrix.build }}.AppImage
