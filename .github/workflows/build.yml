@@ -30,11 +30,17 @@ jobs:
 
 
     steps:
-      - name: Install Qt
+      - if: ${{ matrix.os == 'windows-latest' }}
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{env.QT_VERSION}}
-
+          arch: win64_mingw
+      
+      - if: ${{ matrix.os != 'windows-latest' }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{env.QT_VERSION}}
+      
       - name: Install Build Dependencies
         shell: bash
         run: |
@@ -55,7 +61,7 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            cmake -B build -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release
+            cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
             cmake --build build --parallel
             cp -r build/SmartFileOrganizer.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
