@@ -33,27 +33,17 @@ jobs:
           #   os: windows-latest
 
     steps:
-      - if: ${{ matrix.os == 'windows-latest' }}
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{env.QT_VERSION}}
-          arch: win64_mingw
-
-      - if: ${{ matrix.os != 'windows-latest' }}
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{env.QT_VERSION}}
-
       - name: Install Build Dependencies
         shell: bash
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew upgrade
+            brew install ninja cmake qt
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
             echo "Nothing to do for now..."
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt-get update
-            sudo apt-get install ninja-build cmake wget
+            sudo apt-get install ninja-build cmake wget qt6-base-dev
             wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.arch }}.AppImage
             sudo mv linuxdeploy-${{ matrix.arch }}.AppImage /usr/local/bin/linuxdeploy
             sudo chmod +x /usr/local/bin/linuxdeploy
@@ -64,6 +54,12 @@ jobs:
             sudo mv appimagetool-${{ matrix.arch }}.AppImage /usr/local/bin/appimagetool
             sudo chmod +x /usr/local/bin/appimagetool
           fi
+
+      - if: ${{ matrix.os == 'windows-latest' }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{env.QT_VERSION}}
+          arch: win64_mingw
 
       - name: Checkout
         uses: actions/checkout@v5
