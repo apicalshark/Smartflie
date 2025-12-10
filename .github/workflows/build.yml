@@ -119,6 +119,8 @@ jobs:
             # Copy ggml models to resources
             cp build/bin/ggml-* "$RES_DIR/" 2>/dev/null || true
 
+            chmod -R 755 "$FW_DIR"
+
             # Fix Linking (RPATH)
             install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/$APP_NAME"
 
@@ -130,9 +132,7 @@ jobs:
 
             macdeployqt "$APP_BUNDLE" \
               -verbose=1 \
-              -always-overwrite \
-              -ignore-glob="libggml*" \
-              -ignore-glob="libllama*"
+              -always-overwrite
 
             hdiutil create -volname "$APP_NAME" \
               -srcfolder "$APP_BUNDLE" \
