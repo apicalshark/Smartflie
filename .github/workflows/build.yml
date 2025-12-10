@@ -36,28 +36,11 @@ jobs:
           #   os: windows-latest
 
     steps:
-      - if: ${{ matrix.os == 'macos-latest' }}
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{env.QT_VERSION}}
-          target: desktop
-          arch: clang_64
-          use-official: true
-          email: ${{ secrets.QT_EMAIL }}
-          pw: ${{ secrets.QT_PW }}
-
       - name: Install Build Dependencies
         shell: bash
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
-            # Build manual macdeployqt as requested
-            cd ~
-            git clone https://github.com/GDATASoftwareAG/macdeployqt
-            mkdir -p macdeployqt/build && cd macdeployqt/build
-            cmake -GNinja -S .. -DCMAKE_BUILD_TYPE=Release
-            cmake --build .
-            sudo cp macdeployqt /usr/local/bin/macdeployqt
-            sudo cp macdeployqt /usr/local/bin/macdeployqt6
+            brew install qt
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
             echo "Nothing to do for now..."
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
@@ -103,45 +86,9 @@ jobs:
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
-
-            APP_NAME="${{ env.DIRECTORY }}"
-            APP_BUNDLE="${APP_NAME}.app"
-            MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
-            FW_DIR="$APP_BUNDLE/Contents/Frameworks"
-            RES_DIR="$APP_BUNDLE/Contents/Resources"
-
-
-            rm -rf "$APP_BUNDLE"
-            mkdir -p "$MACOS_DIR" "$FW_DIR" "$RES_DIR"
-
-
-            if [ -f "build/$APP_NAME" ]; then
-                cp "build/$APP_NAME" "$MACOS_DIR/"
-            else
-                cp "build/bin/$APP_NAME" "$MACOS_DIR/"
-            fi
-            
-            chmod +x "$MACOS_DIR/$APP_NAME"
-
-            # Copy only dylibs to frameworks
-            cp build/bin/*.dylib "$FW_DIR/" 2>/dev/null || true
-            # Copy ggml models to resources
-            cp build/bin/ggml-* "$RES_DIR/" 2>/dev/null || true
-
-            chmod -R 755 "$FW_DIR"
-
-            # Fix Linking (RPATH)
-            install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/$APP_NAME"
-
-            # Info.plist
-            cp assets/MacOS/Info.plist "$APP_BUNDLE/Contents/Info.plist"
-            sips -s format icns "assets/icon/icon.png" --out "$RES_DIR/icon.icns"
-            macdeployqt "$APP_BUNDLE" -verbose=1 -always-overwrite
-
-            hdiutil create -volname "$APP_NAME" \
-              -srcfolder "$APP_BUNDLE" \
-              -ov -format UDZO \
-              "dist/${{ matrix.build }}/${APP_NAME}-${{ matrix.build }}.dmg"
+            cp build/${{ env.DIRECTORY }} build/bin
+            # zip the bin folder with name SmartFileOrganizer-${{ matrix.build }}.zip
+            zip dist/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release \
               -DGGML_VULKAN=OFF \
@@ -208,7 +155,7 @@ jobs:
             if [[ $platform =~ "windows" ]]; then
               zip -r dist/${platform}.zip $dir
             elif [[ $platform =~ "macos" ]]; then
-              cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
+              cp $dir/${{ env.DIRECTORY }}-${platform}.zip dist
             elif [[ $platform =~ "linux" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.AppImage dist
               cp $dir/${{ env.DIRECTORY }}-${platform}.tar.gz dist
