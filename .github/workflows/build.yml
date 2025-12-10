@@ -99,21 +99,24 @@ jobs:
             mkdir -p "$MACOS_DIR" "$RESOURCES_DIR" "$FRAMEWORKS_DIR"
             
             # Move binaries
-            mv build/${{ env.DIRECTORY }} "$MACOS_DIR"
-            mv build/bin/ggml-* "$RESOURCES_DIR"
-            # Static libraries, No need to mv
-            # mv build/bin/* "$FRAMEWORKS_DIR"
-            cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
-            
-            macdeployqt "$APP_DIR" -verbose=1
-            codesign --force --deep --sign - "$APP_DIR"
+            cp build/${{ env.DIRECTORY }} "$MACOS_DIR"
+            cp -r build/bin/*.dylib "$FRAMEWORKS_DIR"
+            cp -r build/bin/ggml-* "$RESOURCES_DIR"
 
+            # Add rpath
+            install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/${{ env.DIRECTORY }}"
+
+            # Copy plist and icon
+            cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
+            
+            macdeployqt "$APP_DIR" -verbose=1 -always-overwrite
+
             hdiutil create -volname "${{ env.DIRECTORY }}" -srcfolder "$APP_DIR" -ov -format UDZO "dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg"
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release \
-              -DGGML_VULKAN=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_BACKEND_DL=ON \
-              -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v2 -O3" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v2 -O3"
+              -DGGML_VULKAN=OFF \
+              -DCMAKE_C_FLAGS="$CFLAGS -march=x86-64-v3 -O3" -DCMAKE_CXX_FLAGS="$CXXFLAGS -march=x86-64-v3 -O3"
             ninja -C build
             mkdir -p ${{ env.DIRECTORY }} AppDir/usr/bin AppDir/usr/lib64 AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/512x512/apps
             cp -r build/bin/* ${{ env.DIRECTORY }}/
