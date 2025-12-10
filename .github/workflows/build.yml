@@ -122,31 +122,9 @@ jobs:
             # Fix Linking (RPATH)
             install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/$APP_NAME"
 
-            # 7. Generate Info.plist (Safe Method)
-            cat <<EOF > "$APP_BUNDLE/Contents/Info.plist"
-            <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-            <plist version="1.0">
-            <dict>
-                <key>CFBundleExecutable</key>
-                <string>${APP_NAME}</string>
-                <key>CFBundleIconFile</key>
-                <string>icon.icns</string>
-                <key>CFBundleIdentifier</key>
-                <string>io.github.anndy145.${APP_NAME}</string>
-                <key>CFBundlePackageType</key>
-                <string>APPL</string>
-                <key>CFBundleSignature</key>
-                <string>????</string>
-                <key>LSMinimumSystemVersion</key>
-                <string>11.0</string>
-                <key>NSHighResolutionCapable</key>
-                <true/>
-                <key>NSPrincipalClass</key>
-                <string>NSApplication</string>
-            </dict>
-            </plist>
-            EOF
+            # Info.plist
+            cp assets/MacOS/Info.plist "$APP_BUNDLE/Contents/Info.plist"
+
 
             sips -s format icns "assets/icon/icon.png" --out "$RES_DIR/icon.icns"
 
