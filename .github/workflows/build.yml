@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build: [linux_x64, macos_arm64]
+        build: [linux_x64, macos_arm64, windows_x64]
         include:
           - build: linux_x64
             os: ubuntu-latest
@@ -32,8 +32,8 @@ jobs:
           - build: macos_arm64
             os: macos-latest
             arch: aarch64
-          # - build: windows_x64
-          #   os: windows-latest
+          - build: windows_x64
+            os: windows-latest
 
     steps:
       - name: Install Build Dependencies
