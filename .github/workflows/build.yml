@@ -76,9 +76,17 @@ jobs:
         with:
           version: ${{env.QT_VERSION}}
           arch: win64_mingw
+          use-official: true
+          email: ${{ secrets.QT_EMAIL }}
+          pw: ${{ secrets.QT_PW }}
 
       - if: ${{ matrix.os == 'macos-latest' }}
         uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{env.QT_VERSION}}
+          use-official: true
+          email: ${{ secrets.QT_EMAIL }}
+          pw: ${{ secrets.QT_PW }}
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -126,10 +134,7 @@ jobs:
 
             # Info.plist
             cp assets/MacOS/Info.plist "$APP_BUNDLE/Contents/Info.plist"
-
-
             sips -s format icns "assets/icon/icon.png" --out "$RES_DIR/icon.icns"
-
             macdeployqt "$APP_BUNDLE" -verbose=1 -always-overwrite
 
             hdiutil create -volname "$APP_NAME" \
