@@ -95,6 +95,11 @@ jobs:
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
 
+            QT_HOST_PATH=$(brew --prefix qt)
+            MACDEPLOYQT_EXE="$QT_HOST_PATH/bin/macdeployqt"
+            
+            echo "Using macdeployqt at: $MACDEPLOYQT_EXE"
+
             APP_NAME="${{ env.DIRECTORY }}"
             APP_BUNDLE="${APP_NAME}.app"
             MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
@@ -130,9 +135,7 @@ jobs:
 
             sips -s format icns "assets/icon/icon.png" --out "$RES_DIR/icon.icns"
 
-            macdeployqt "$APP_BUNDLE" \
-              -verbose=1 \
-              -always-overwrite
+            "$MACDEPLOYQT_EXE" "$APP_BUNDLE" -verbose=1 -always-overwrite
 
             hdiutil create -volname "$APP_NAME" \
               -srcfolder "$APP_BUNDLE" \
