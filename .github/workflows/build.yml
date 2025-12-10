@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 env:
-  QT_VERSION: "6.9.3"
+  QT_VERSION: "6.10.1"
   DIRECTORY: "SmartFileOrganizer"
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build: [linux_x64, macos_arm644]
+        build: [linux_x64, macos_arm64]
         include:
           - build: linux_x64
             os: ubuntu-latest
