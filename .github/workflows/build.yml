@@ -36,11 +36,18 @@ jobs:
           #   os: windows-latest
 
     steps:
+      - if: ${{ matrix.os == 'macos-latest' }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{env.QT_VERSION}}
+          use-official: true
+          email: ${{ secrets.QT_EMAIL }}
+          pw: ${{ secrets.QT_PW }}
+
       - name: Install Build Dependencies
         shell: bash
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
-            echo "Nothing to do for now..."
             # Build manual macdeployqt as requested
             cd ~
             git clone https://github.com/GDATASoftwareAG/macdeployqt
@@ -76,14 +83,6 @@ jobs:
         with:
           version: ${{env.QT_VERSION}}
           arch: win64_mingw
-          use-official: true
-          email: ${{ secrets.QT_EMAIL }}
-          pw: ${{ secrets.QT_PW }}
-
-      - if: ${{ matrix.os == 'macos-latest' }}
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{env.QT_VERSION}}
           use-official: true
           email: ${{ secrets.QT_EMAIL }}
           pw: ${{ secrets.QT_PW }}
