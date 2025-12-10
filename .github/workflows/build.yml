@@ -40,10 +40,7 @@ jobs:
         shell: bash
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
-            brew upgrade
-            # Added ninja here to ensure cmake works
-            brew install qt vulkan-headers ninja
-            
+            echo "Nothing to do for now..."
             # Build manual macdeployqt as requested
             cd ~
             git clone https://github.com/GDATASoftwareAG/macdeployqt
@@ -80,6 +77,9 @@ jobs:
           version: ${{env.QT_VERSION}}
           arch: win64_mingw
 
+      - if: ${{ matrix.os == 'macos-latest' }}
+        uses: jurplel/install-qt-action@v4
+
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -94,11 +94,6 @@ jobs:
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
-
-            QT_HOST_PATH=$(brew --prefix qt)
-            MACDEPLOYQT_EXE="$QT_HOST_PATH/bin/macdeployqt"
-            
-            echo "Using macdeployqt at: $MACDEPLOYQT_EXE"
 
             APP_NAME="${{ env.DIRECTORY }}"
             APP_BUNDLE="${APP_NAME}.app"
@@ -135,7 +130,7 @@ jobs:
 
             sips -s format icns "assets/icon/icon.png" --out "$RES_DIR/icon.icns"
 
-            "$MACDEPLOYQT_EXE" "$APP_BUNDLE" -verbose=1 -always-overwrite
+            macdeployqt "$APP_BUNDLE" -verbose=1 -always-overwrite
 
             hdiutil create -volname "$APP_NAME" \
               -srcfolder "$APP_BUNDLE" \
