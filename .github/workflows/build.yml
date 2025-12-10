@@ -40,6 +40,8 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{env.QT_VERSION}}
+          target: desktop
+          arch: clang_64
           use-official: true
           email: ${{ secrets.QT_EMAIL }}
           pw: ${{ secrets.QT_PW }}
