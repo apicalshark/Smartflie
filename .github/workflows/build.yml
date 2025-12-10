@@ -88,7 +88,7 @@ jobs:
             ninja -C build
             cp build/${{ env.DIRECTORY }} build/bin
             # zip the bin folder with name SmartFileOrganizer-${{ matrix.build }}.zip
-            zip dist/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
+            zip -r dist/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
             cp dist/${{ env.DIRECTORY }}-${{ matrix.build }}.zip dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release \
