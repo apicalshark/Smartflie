@@ -51,7 +51,7 @@ jobs:
             # cp macdeployqt /usr/local/bin/macdeployqt
             # cp macdeployqt /usr/local/bin/macdeployqt6
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            choco install zip
+            choco install zip tree
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
             sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2 \
@@ -88,8 +88,15 @@ jobs:
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
             cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
             cmake --build build -j$(nproc)
-            cp -r build/${{ env.DIRECTORY }}.exe build/bin
-            zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
+
+            tree build
+
+            cp -r build/${{ env.DIRECTORY }}.exe dist/${{ matrix.build }}
+            
+            # if bin exist
+            if [ -d "build/bin" ]; then
+              cp -r build/bin/* dist/${{ matrix.build }}
+            fi
 
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
@@ -185,7 +192,7 @@ jobs:
             platform=${dir#"artifact-"}
             unset exe
             if [[ $platform =~ "windows" ]]; then
-              cp $dir/${{ env.DIRECTORY }}-${platform}.zip dist
+              zip -r dist/${{ env.DIRECTORY }}-${platform}.zip $dir
             elif [[ $platform =~ "macos" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
             elif [[ $platform =~ "linux" ]]; then

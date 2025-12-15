@@ -11,10 +11,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# if(WIN32)
-#     add_compile_definitions(_WIN32_WINNT=0x0A00)
-#     link_libraries(ws2_32)
-# endif()
+if(WIN32)
+    add_compile_definitions(_WIN32_WINNT=0x0A00)
+    link_libraries(ws2_32)
+endif()
 
 include(FetchContent)
 
