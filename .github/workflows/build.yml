@@ -51,7 +51,7 @@ jobs:
             cp macdeployqt /usr/local/bin/macdeployqt
             cp macdeployqt /usr/local/bin/macdeployqt6
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            echo "Nothing to do for now..."
+            scoop install zip
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
             sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2 \
