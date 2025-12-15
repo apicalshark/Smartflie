@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build: [linux_x64, macos_arm64]
+        build: [linux_x64, macos_arm64, windows_x64]
         include:
           - build: linux_x64
             os: ubuntu-latest
@@ -32,8 +32,8 @@ jobs:
           - build: macos_arm64
             os: macos-latest
             arch: aarch64
-          # - build: windows_x64
-          #   os: windows-latest
+          - build: windows_x64
+            os: windows-latest
 
     steps:
       - name: Install Build Dependencies
@@ -102,10 +102,14 @@ jobs:
             mv build/${{ env.DIRECTORY }} "$MACOS_DIR"
             mv build/bin/ggml-* "$RESOURCES_DIR"
             # Static libraries, No need to mv
-            # mv build/bin/* "$FRAMEWORKS_DIR"
+            mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             
-            macdeployqt "$APP_DIR" -verbose=1
+            # Add rpath
+            APP_NAME="${{ env.DIRECTORY }}.app/Contents/MacOS/${{ env.DIRECTORY }}"
+            install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/$APP_NAME"
+
+            # macdeployqt "$APP_DIR" -verbose=1
             codesign --force --deep --sign - "$APP_DIR"
 
             sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
