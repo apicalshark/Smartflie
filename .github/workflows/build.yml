@@ -110,7 +110,7 @@ jobs:
             # usage: install_name_tool -add_rpath /path/to/lib your_executable
             install_name_tool -add_rpath @executable_path/../Frameworks "$MACOS_DIR/${{ env.DIRECTORY }}"
 
-            dylibbundler -od -ns -b -x "$MACOS_DIR/${{ env.DIRECTORY }}" -d "$FRAMEWORKS_DIR/" -s /opt/homebrew/opt/
+            dylibbundler -od -ns -b -x "$MACOS_DIR/${{ env.DIRECTORY }}" -d "$FRAMEWORKS_DIR/" -s /opt/homebrew/opt/,$FRAMEWORKS_DIR
 
             # check rpath
             otool -l "$MACOS_DIR/${{ env.DIRECTORY }}"
