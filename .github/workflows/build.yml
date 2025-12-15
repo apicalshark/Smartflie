@@ -94,110 +94,28 @@ jobs:
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
-            echo "--- Creating App Bundle Structure ---"
             APP_DIR="${{ env.DIRECTORY }}.app"
             MACOS_DIR="$APP_DIR/Contents/MacOS"
             RESOURCES_DIR="$APP_DIR/Contents/Resources"
             FRAMEWORKS_DIR="$APP_DIR/Contents/Frameworks"
-            PLUGINS_DIR="$APP_DIR/Contents/Plugins"
-
-            mkdir -p "$MACOS_DIR" "$RESOURCES_DIR" "$FRAMEWORKS_DIR" "$PLUGINS_DIR"
-
-            # --- 1. Move Your Binaries and Resources ---
-            echo "--- Moving Executable and Project Libraries ---"
+            mkdir -p "$MACOS_DIR" "$RESOURCES_DIR" "$FRAMEWORKS_DIR"
+            
+            # Move binaries
             mv build/${{ env.DIRECTORY }} "$MACOS_DIR"
-            # Your ggml-* files seem like resources, if they are dylibs, move to Frameworks
-            mv build/bin/ggml-* "$RESOURCES_DIR" 
-            # Assuming these are your own dynamic libraries (e.g., libllama.dylib)
-            mv build/bin/*.dylib "$FRAMEWORKS_DIR"
+            mv build/bin/ggml-* "$RESOURCES_DIR"
+            # Static libraries, No need to mv
+            mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
-
-            # --- 2. Add RPATH to Your Executable ---
-            # This tells your app to look for libraries in the Frameworks directory.
-            echo "--- Adding RPATH to Executable ---"
+            
+            # Add rpath to executable
+            # usage: install_name_tool -add_rpath /path/to/lib your_executable
             install_name_tool -add_rpath @executable_path/../Frameworks "$MACOS_DIR/${{ env.DIRECTORY }}"
 
-            # --- 3. Find, Copy, and Fix Qt Dependencies ---
-            echo "--- Bundling Dependencies ---"
-            # Use otool to find all linked dynamic libraries and copy them
-            # Grep for your homebrew path, or any non-system path like /opt/homebrew or /usr/local
-            otool -L "$MACOS_DIR/${{ env.DIRECTORY }}" | grep -E '(/opt/homebrew|/usr/local)' | awk '{print $1}' | while read LIB_PATH; do
-                LIB_NAME=$(basename "$LIB_PATH")
-    
-                # Check if it's a Qt Framework
-                if [[ "$LIB_PATH" == *.framework* ]]; then
-                    FRAMEWORK_NAME=$(echo "$LIB_PATH" | sed -E 's|.*(/(Qt[^/]+\.framework)).*|\1|')
-                    FRAMEWORK_PATH=$(dirname "$LIB_PATH" | sed -E 's|(/Versions/A).*|\1|')
-        
-                    echo "Copying framework: $FRAMEWORK_NAME"
-                    # Copy the entire framework directory
-                    cp -R "$FRAMEWORK_PATH" "$FRAMEWORKS_DIR/"
-        
-                    # Change the executable's reference to this framework
-                    NEW_FW_PATH="@rpath/$FRAMEWORK_NAME/Versions/A/$(basename $FRAMEWORK_NAME .framework)"
-                    echo "  Fixing executable reference to -> $NEW_FW_PATH"
-                    install_name_tool -change "$LIB_PATH" "$NEW_FW_PATH" "$MACOS_DIR/${{ env.DIRECTORY }}"
+            # check rpath
+            otool -l "$MACOS_DIR/${{ env.DIRECTORY }}"
 
-                else # It's a plain dylib
-                    echo "Copying library: $LIB_NAME"
-                    cp "$LIB_PATH" "$FRAMEWORKS_DIR/"
-        
-                    # Change the executable's reference to this library
-                    NEW_LIB_PATH="@rpath/$LIB_NAME"
-                    echo "  Fixing executable reference to -> $NEW_LIB_PATH"
-                    install_name_tool -change "$LIB_PATH" "$NEW_LIB_PATH" "$MACOS_DIR/${{ env.DIRECTORY }}"
-                fi
-            done
-
-            # --- 4. Fix Linkages INSIDE the Bundled Libraries ---
-            echo "--- Recursively Fixing Library Linkages ---"
-            find "$FRAMEWORKS_DIR" -type f \( -name "*.dylib" -o -perm +111 \) | while read BUNDLED_LIB; do
-                # Only process files that are Mach-O binaries
-                if ! file "$BUNDLED_LIB" | grep -q "Mach-O"; then
-                    continue
-                fi
-    
-                LIB_BASENAME=$(basename "$BUNDLED_LIB")
-
-                # A. Update the library's own ID so it knows its new @rpath location
-                # Frameworks need special handling for their ID
-                if [[ "$BUNDLED_LIB" == *.framework* ]]; then
-                    FRAMEWORK_NAME=$(echo "$BUNDLED_LIB" | sed -E 's|.*(/(Qt[^/]+\.framework)).*|\1|')
-                    NEW_ID="@rpath/$FRAMEWORK_NAME/Versions/A/$(basename $FRAMEWORK_NAME .framework)"
-                    echo "Updating ID for $LIB_BASENAME -> $NEW_ID"
-                    install_name_tool -id "$NEW_ID" "$BUNDLED_LIB"
-                else # Plain dylib
-                    NEW_ID="@rpath/$LIB_BASENAME"
-                    echo "Updating ID for $LIB_BASENAME -> $NEW_ID"
-                    install_name_tool -id "$NEW_ID" "$BUNDLED_LIB"
-                fi
-    
-                # B. Find ITS dependencies and update their paths to point inside the bundle
-                otool -L "$BUNDLED_LIB" | grep -E '(/opt/homebrew|/usr/local)' | awk '{print $1}' | while read DEP_PATH; do
-                    DEP_NAME=$(basename "$DEP_PATH")
-        
-                    if [[ "$DEP_PATH" == *.framework* ]]; then
-                         DEP_FRAMEWORK_NAME=$(echo "$DEP_PATH" | sed -E 's|.*(/(Qt[^/]+\.framework)).*|\1|')
-                         NEW_DEP_PATH="@rpath/$DEP_FRAMEWORK_NAME/Versions/A/$(basename $DEP_FRAMEWORK_NAME .framework)"
-                    else
-                         NEW_DEP_PATH="@rpath/$DEP_NAME"
-                    fi
-        
-                    echo "  Updating dependency for $LIB_BASENAME: $DEP_NAME -> $NEW_DEP_PATH"
-                    install_name_tool -change "$DEP_PATH" "$NEW_DEP_PATH" "$BUNDLED_LIB"
-                done
-            done
-
-            # --- 5. Copy Essential Qt Plugins ---
-            echo "--- Copying Qt Platform Plugin ---"
-            QT_PLUGIN_PATH=$(brew --prefix qt)/plugins
-            mkdir -p "$PLUGINS_DIR/platforms"
-            # Add other plugins (imageformats, etc.) if needed
-            cp "$QT_PLUGIN_PATH/platforms/libqcocoa.dylib" "$PLUGINS_DIR/platforms/"
-            # Fix the plugin's own dependencies
-            install_name_tool -change /opt/homebrew/opt/qtbase/lib/QtCore.framework/Versions/A/QtCore @rpath/QtCore.framework/Versions/A/QtCore "$PLUGINS_DIR/platforms/libqcocoa.dylib"
-            install_name_tool -change /opt/homebrew/opt/qtbase/lib/QtGui.framework/Versions/A/QtGui @rpath/QtGui.framework/Versions/A/QtGui "$PLUGINS_DIR/platforms/libqcocoa.dylib"
-            install_name_tool -change /opt/homebrew/opt/qtbase/lib/QtWidgets.framework/Versions/A/QtWidgets @rpath/QtWidgets.framework/Versions/A/QtWidgets "$PLUGINS_DIR/platforms/libqcocoa.dylib"
+            # macdeployqt "$APP_DIR" -verbose=1
+            # codesign --force --deep --sign - "$APP_DIR"
 
             sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
             hdiutil create -volname "${{ env.DIRECTORY }}" -srcfolder "$APP_DIR" -ov -format UDZO "dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg"
