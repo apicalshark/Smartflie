@@ -86,17 +86,12 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-            cmake --build build -j$(nproc)
-
-            tree build
-
-            cp -r build/${{ env.DIRECTORY }}.exe dist/${{ matrix.build }}
-            
-            # if bin exist
-            if [ -d "build/bin" ]; then
-              cp -r build/bin/* dist/${{ matrix.build }}
-            fi
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
+            ninja -C build
+            cd build && mkdir bin
+            DESTDIR="bin" ninja install 
+            cd ..
+            zip -r ${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
 
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
@@ -193,7 +188,8 @@ jobs:
             platform=${dir#"artifact-"}
             unset exe
             if [[ $platform =~ "windows" ]]; then
-              zip -r dist/${{ env.DIRECTORY }}-${platform}.zip $dir
+              # zip -r dist/${{ env.DIRECTORY }}-${platform}.zip $dir
+              cp $dir/${{ env.DIRECTORY }}-${platform}.zip dist
             elif [[ $platform =~ "macos" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
             elif [[ $platform =~ "linux" ]]; then
