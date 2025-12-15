@@ -88,11 +88,7 @@ jobs:
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
-            cd build && mkdir bin
-            DESTDIR="bin" ninja install 
-            cd ..
-            zip -r ${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
-
+            cp build/${{ env.DIRECTORY }}.exe dist/${{ matrix.build }}
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
@@ -189,7 +185,7 @@ jobs:
             unset exe
             if [[ $platform =~ "windows" ]]; then
               # zip -r dist/${{ env.DIRECTORY }}-${platform}.zip $dir
-              cp $dir/${{ env.DIRECTORY }}-${platform}.zip dist
+              cp $dir/${{ env.DIRECTORY }}.exe dist
             elif [[ $platform =~ "macos" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
             elif [[ $platform =~ "linux" ]]; then
