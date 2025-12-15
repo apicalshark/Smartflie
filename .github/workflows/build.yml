@@ -105,12 +105,15 @@ jobs:
             mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             
-            # Add rpath
-            APP_NAME="${{ env.DIRECTORY }}.app/Contents/MacOS/${{ env.DIRECTORY }}"
-            install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/$APP_NAME"
+            # Add rpath to executable
+            # usage: install_name_tool -add_rpath /path/to/lib your_executable
+            install_name_tool -add_rpath @executable_path/../Frameworks "$MACOS_DIR/${{ env.DIRECTORY }}"
+
+            # check rpath
+            otool -l "$MACOS_DIR/${{ env.DIRECTORY }}"
 
             # macdeployqt "$APP_DIR" -verbose=1
-            codesign --force --deep --sign - "$APP_DIR"
+            # codesign --force --deep --sign - "$APP_DIR"
 
             sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
             hdiutil create -volname "${{ env.DIRECTORY }}" -srcfolder "$APP_DIR" -ov -format UDZO "dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg"
