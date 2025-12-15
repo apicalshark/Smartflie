@@ -41,15 +41,15 @@ jobs:
         run: |
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew upgrade
-            brew install qt vulkan-headers
+            brew install qt vulkan-headers dylibbundler
             # build macdeployqt
-            cd ~
-            git clone https://github.com/GDATASoftwareAG/macdeployqt
-            mkdir -p macdeployqt/build && cd macdeployqt/build
-            cmake -GNinja -S .. -DCMAKE_BUILD_TYPE=Release
-            cmake --build .
-            cp macdeployqt /usr/local/bin/macdeployqt
-            cp macdeployqt /usr/local/bin/macdeployqt6
+            # cd ~
+            # git clone https://github.com/GDATASoftwareAG/macdeployqt
+            # mkdir -p macdeployqt/build && cd macdeployqt/build
+            # cmake -GNinja -S .. -DCMAKE_BUILD_TYPE=Release
+            # cmake --build .
+            # cp macdeployqt /usr/local/bin/macdeployqt
+            # cp macdeployqt /usr/local/bin/macdeployqt6
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
             choco install zip
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
@@ -110,6 +110,8 @@ jobs:
             # Add rpath to executable
             # usage: install_name_tool -add_rpath /path/to/lib your_executable
             install_name_tool -add_rpath @executable_path/../Frameworks "$MACOS_DIR/${{ env.DIRECTORY }}"
+
+            dylibbundler -od -b -x "$MACOS_DIR/${{ env.DIRECTORY }}" -d "$FRAMEWORKS_DIR/"
 
             # check rpath
             otool -l "$MACOS_DIR/${{ env.DIRECTORY }}"
