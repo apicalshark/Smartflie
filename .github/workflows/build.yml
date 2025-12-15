@@ -103,14 +103,14 @@ jobs:
             mv build/bin/ggml-* "$RESOURCES_DIR"
             # Static libraries, No need to mv
             ls -al build/bin
-            mv build/bin/* "$FRAMEWORKS_DIR"
+            cp -r build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             
             # Add rpath to executable
             # usage: install_name_tool -add_rpath /path/to/lib your_executable
             install_name_tool -add_rpath @executable_path/../Frameworks "$MACOS_DIR/${{ env.DIRECTORY }}"
 
-            dylibbundler -od -ns -b -x "$MACOS_DIR/${{ env.DIRECTORY }}" -d "$FRAMEWORKS_DIR/" -s /opt/homebrew/opt/,$FRAMEWORKS_DIR
+            dylibbundler -od -ns -b -x "$MACOS_DIR/${{ env.DIRECTORY }}" -d "$FRAMEWORKS_DIR/" -s build/bin,/opt/homebrew/opt/
 
             # check rpath
             otool -l "$MACOS_DIR/${{ env.DIRECTORY }}"
