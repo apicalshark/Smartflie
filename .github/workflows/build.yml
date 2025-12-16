@@ -79,7 +79,7 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{env.QT_VERSION}}
-          # arch: win64_mingw
+          arch: win64_mingw
 
       - name: Checkout
         uses: actions/checkout@v5
