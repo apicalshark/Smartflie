@@ -42,7 +42,8 @@ jobs:
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew upgrade
             brew install qt vulkan-headers dylibbundler
-            QT_PATH=$(brew --prefix qt@6)/lib/cmake/Qt6
+            # it's /opt/homebrew/opt/qt/
+            QT_PATH=$(brew --prefix qt@6)
             echo QT_PATH=$QT_PATH >> $GITHUB_ENV
             # build macdeployqt
             # cd ~
@@ -107,7 +108,7 @@ jobs:
             # Move binaries
             mv build/${{ env.DIRECTORY }} "$MACOS_DIR"
             mv build/bin/ggml-* "$RESOURCES_DIR"
-            ls -al build/bin
+            ls -al build/bins
             mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             
