@@ -36,6 +36,12 @@ jobs:
             os: windows-latest
 
     steps:
+      - if: ${{ matrix.os == 'windows-latest' }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{env.QT_VERSION}}
+          arch: win64_mingw
+
       - name: Install Build Dependencies
         shell: bash
         run: |
@@ -75,11 +81,6 @@ jobs:
           sudo mv appimagetool-${{ matrix.arch }}.AppImage /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
 
-      - if: ${{ matrix.os == 'windows-latest' }}
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{env.QT_VERSION}}
-          arch: win64_mingw
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -93,6 +94,8 @@ jobs:
             ninja -C build
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
+            ls -al /c/Qt/Tools
+            export PATH=$PATH:/c/Qt/Tools/mingw131_64/bin
             windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
