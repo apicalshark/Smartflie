@@ -94,7 +94,10 @@ jobs:
             ninja -C build
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
-            windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe --compiler-runtime 
+            windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe --compiler-runtime
+            # Find libgomp-1.dll in the parent directory(../) where Qt is installed
+            find ../ -name libgomp-1.dll | xargs -I{} cp {} build/bin
+
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
