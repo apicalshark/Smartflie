@@ -91,10 +91,9 @@ jobs:
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
-            depends build/${{ env.DIRECTORY }}.exe
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
-            windeployqt build/bin/${{ env.DIRECTORY }}.exe
+            windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
