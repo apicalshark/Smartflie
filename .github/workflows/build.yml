@@ -107,7 +107,7 @@ jobs:
             # Move binaries
             mv build/${{ env.DIRECTORY }} "$MACOS_DIR"
             mv build/bin/ggml-* "$RESOURCES_DIR"
-            ls -al build/bins
+            ls -al build/bin
             mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             
@@ -115,7 +115,6 @@ jobs:
             # usage: install_name_tool -add_rpath /path/to/lib your_executable
             install_name_tool -add_rpath @executable_path/../Frameworks "$MACOS_DIR/${{ env.DIRECTORY }}"
 
-            
             # QT_PATH
             
             # check rpath
