@@ -42,6 +42,8 @@ jobs:
           if [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             brew upgrade
             brew install qt vulkan-headers dylibbundler
+            QT_PATH=$(brew --prefix qt@6)/lib/cmake/Qt6
+            echo QT_PATH=$QT_PATH >> $GITHUB_ENV
             # build macdeployqt
             # cd ~
             # git clone https://github.com/GDATASoftwareAG/macdeployqt
@@ -76,7 +78,7 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{env.QT_VERSION}}
-          arch: win64_mingw
+          # arch: win64_mingw
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -88,7 +90,11 @@ jobs:
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
-            cp build/${{ env.DIRECTORY }}.exe dist/${{ matrix.build }}
+            depends build/${{ env.DIRECTORY }}.exe
+            mkdir -p build/bin
+            cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
+            windeployqt build/bin/${{ env.DIRECTORY }}.exe
+            zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
@@ -102,20 +108,19 @@ jobs:
             mv build/${{ env.DIRECTORY }} "$MACOS_DIR"
             mv build/bin/ggml-* "$RESOURCES_DIR"
             ls -al build/bin
-            # mv build/bin/* "$FRAMEWORKS_DIR"
+            mv build/bin/* "$FRAMEWORKS_DIR"
             cp assets/MacOS/Info.plist "$APP_DIR/Contents/Info.plist"
             
             # Add rpath to executable
             # usage: install_name_tool -add_rpath /path/to/lib your_executable
             install_name_tool -add_rpath @executable_path/../Frameworks "$MACOS_DIR/${{ env.DIRECTORY }}"
 
-            dylibbundler -od -ns -b -x "$MACOS_DIR/${{ env.DIRECTORY }}" -d "$FRAMEWORKS_DIR/" -s build/bin,/opt/homebrew/opt/
-
+            
+            # QT_PATH
+            
             # check rpath
+            ${{ env.QT_PATH }}/bin/macdeployqt "$APP_DIR" -libpath=${{ env.QT_PATH }}/lib
             otool -l "$MACOS_DIR/${{ env.DIRECTORY }}"
-
-            # macdeployqt "$APP_DIR" -verbose=1
-            # codesign --force --deep --sign - "$APP_DIR"
 
             sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
             hdiutil create -volname "${{ env.DIRECTORY }}" -srcfolder "$APP_DIR" -ov -format UDZO "dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg"
@@ -184,7 +189,7 @@ jobs:
             unset exe
             if [[ $platform =~ "windows" ]]; then
               # zip -r dist/${{ env.DIRECTORY }}-${platform}.zip $dir
-              cp $dir/${{ env.DIRECTORY }}.exe dist
+              cp $dir/${{ env.DIRECTORY }}-${platform}.zip dist
             elif [[ $platform =~ "macos" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
             elif [[ $platform =~ "linux" ]]; then

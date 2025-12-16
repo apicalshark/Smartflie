@@ -14,8 +14,6 @@ set(CMAKE_AUTOUIC ON)
 if(WIN32)
     add_compile_definitions(_WIN32_WINNT=0x0A00)
     link_libraries(ws2_32)
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-    set(LLAMA_STATIC ON CACHE BOOL "" FORCE)
 endif()
 
 include(FetchContent)
