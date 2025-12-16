@@ -126,6 +126,7 @@ jobs:
             otool -l "$MACOS_DIR/${{ env.DIRECTORY }}"
 
             sips -s format icns "assets/icon/icon.png" --out "$RESOURCES_DIR/icon.icns"
+            zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip "$APP_DIR"
             hdiutil create -volname "${{ env.DIRECTORY }}" -srcfolder "$APP_DIR" -ov -format UDZO "dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.dmg"
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release \
@@ -195,6 +196,7 @@ jobs:
               cp $dir/${{ env.DIRECTORY }}-${platform}.zip dist
             elif [[ $platform =~ "macos" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.dmg dist
+              cp $dir/${{ env.DIRECTORY }}-${platform}.zip dist
             elif [[ $platform =~ "linux" ]]; then
               cp $dir/${{ env.DIRECTORY }}-${platform}.AppImage dist
               cp $dir/${{ env.DIRECTORY }}-${platform}.tar.gz dist
