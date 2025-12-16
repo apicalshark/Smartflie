@@ -94,8 +94,6 @@ jobs:
             ninja -C build
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
-            ls -al $QT_ROOT_DIR\Tools
-            export PATH=$PATH:$QT_ROOT_DIR\Tools\mingw131_64\bin
             windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe --compiler-runtime 
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
