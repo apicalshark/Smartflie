@@ -92,7 +92,7 @@ jobs:
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
             mkdir -p build/bin
-            pwsh -Command "Copy-Item -Path '${{ github.workspace }}\\Qt\\${{ env.QT_VERSION }}\\mingw_64\\bin\\libgomp-1.dll' -Destination 'build/bin'"
+            pwsh -Command "Copy-Item -Path 'D:\\a\\Smartflie\\Qt\\6.10.1\\mingw_64\\bin\\libgomp-1.dll' -Destination 'build/bin'"
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
