@@ -11,10 +11,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# if(WIN32)
-#     add_compile_definitions(_WIN32_WINNT=0x0A00)
-#     link_libraries(ws2_32)
-# endif()
+if(WIN32)
+    add_compile_definitions(_WIN32_WINNT=0x0A00)
+    link_libraries(ws2_32)
+endif()
 
 include(FetchContent)
 
@@ -68,6 +68,6 @@ target_include_directories(SmartFileOrganizer PRIVATE
 
 target_link_libraries(SmartFileOrganizer PRIVATE Qt6::Widgets Qt6::Concurrent Qt6::Network llama nlohmann_json::nlohmann_json)
 
-# if(WIN32)
-#     set_property(TARGET SmartFileOrganizer PROPERTY WIN32_EXECUTABLE ON)
-# endif()
+if(WIN32)
+     set_property(TARGET SmartFileOrganizer PROPERTY WIN32_EXECUTABLE ON)
+endif()
