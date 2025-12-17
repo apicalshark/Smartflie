@@ -41,6 +41,7 @@ jobs:
         with:
           version: ${{env.QT_VERSION}}
           arch: win64_mingw
+          dir: ${{ github.workspace }}
 
       - name: Install Build Dependencies
         shell: bash
@@ -95,9 +96,9 @@ jobs:
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
             windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe --compiler-runtime
-            # Find libgomp-1.dll in the parent directory(../) where Qt is installed with powershell
+            # Find libgomp-1.dll in the github workspace where Qt is installed
             # and copy it to the build/bin directory
-            pwsh.exe -Command "Copy-Item -Path '${{ env.QT_ROOT_DIR }}\bin\libgomp-1.dll' -Destination 'build\bin'"
+            cp ${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/win64_mingw/bin/libgomp-1.dll build/bin
 
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
