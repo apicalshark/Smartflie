@@ -91,7 +91,7 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/win64_mingw/lib/cmake"
             ninja -C build
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
@@ -99,7 +99,6 @@ jobs:
             # Find libgomp-1.dll in the github workspace where Qt is installed
             # and copy it to the build/bin directory
             cp ${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/win64_mingw/bin/libgomp-1.dll build/bin
-
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
