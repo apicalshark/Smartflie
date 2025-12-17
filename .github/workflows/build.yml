@@ -61,7 +61,7 @@ jobs:
             # cp macdeployqt /usr/local/bin/macdeployqt
             # cp macdeployqt /usr/local/bin/macdeployqt6
           elif [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            choco install zip tree
+            choco install zip tree 7zip wget
           elif [[ ${{ matrix.build }} == "linux_x64" ]]; then
             sudo apt update -y
             sudo apt install -y ninja-build cmake wget qt6-base-dev qt6-wayland libfuse2 \
@@ -91,13 +91,19 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            ls -al ../Qt/${{ env.QT_VERSION }}/mingw_64/bin
-            cp ../Qt/${{ env.QT_VERSION }}/mingw_64/bin/libgomp-1.dll build/bin
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
             windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe --compiler-runtime
+
+            # Dirty way to get libgomp-1.dll
+            mkdir -p temp
+            cd temp
+            wget https://github.com/niXman/mingw-builds-binaries/releases/download/13.1.0-rt_v11-rev1/x86_64-13.1.0-release-posix-seh-msvcrt-rt_v11-rev1.7z -o mingw.7z
+            7z e mingw.7z
+            cd ..
+            cp temp/libgomp-1.dll build/bin
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
