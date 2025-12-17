@@ -94,7 +94,7 @@ jobs:
             ninja -C build
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
-            windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe --compiler-runtime
+            windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe
 
             # Dirty way to get libgomp-1.dll
             mkdir -p temp
