@@ -91,7 +91,7 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
-            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ github.workspace }}\Qt\${{ env.QT_VERSION }}\mingw_64\lib\cmake"
+            cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DQT6_DIR="${{ github.workspace }}\Qt\${{ env.QT_VERSION }}\mingw_64\lib\cmake\Qt6"
             ninja -C build
             mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
