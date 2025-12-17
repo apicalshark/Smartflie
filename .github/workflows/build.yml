@@ -91,14 +91,12 @@ jobs:
         run: |
           mkdir -p build dist/${{ matrix.build }}
           if [[ ${{ matrix.build }} == "windows_x64" ]]; then
+            mkdir -p build/bin
+            pwsh -Command "Copy-Item -Path '${{ github.workspace }}\\Qt\\${{ env.QT_VERSION }}\\mingw_64\\bin\\libgomp-1.dll' -Destination 'build/bin'"
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
             ninja -C build
-            mkdir -p build/bin
             cp build/${{ env.DIRECTORY }}.exe build/bin/${{ env.DIRECTORY }}.exe
             windeployqt.exe build/bin/${{ env.DIRECTORY }}.exe --compiler-runtime
-            # Find libgomp-1.dll in the github workspace where Qt is installed
-            # and copy it to the build/bin directory
-            pwsh -Command "Copy-Item -Path '${{ github.workspace }}\\Qt\\${{ env.QT_VERSION }}\\mingw_64\\bin\\libgomp-1.dll' -Destination 'build/bin'"
             zip -r dist/${{ matrix.build }}/${{ env.DIRECTORY }}-${{ matrix.build }}.zip build/bin
           elif [[ ${{ matrix.build }} == "macos_arm64" ]]; then
             cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release
