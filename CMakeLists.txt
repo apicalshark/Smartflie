@@ -18,7 +18,6 @@ endif()
 
 include(FetchContent)
 
-
 # Set llama.cpp options before MakeAvailable
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -67,9 +66,6 @@ target_include_directories(SmartFileOrganizer PRIVATE
 )
 
 target_link_libraries(SmartFileOrganizer PRIVATE Qt6::Widgets Qt6::Concurrent Qt6::Network llama nlohmann_json::nlohmann_json)
-if(MINGW)
-    target_link_libraries(SmartFileOrganizer PRIVATE mingw32)
-endif()
 
 if(WIN32)
      set_property(TARGET SmartFileOrganizer PROPERTY WIN32_EXECUTABLE ON)
